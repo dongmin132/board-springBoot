@@ -22,7 +22,7 @@ import java.util.Objects;
         @Index(columnList = "createdAt"),
         @Index(columnList = "createdBy")
 })
-public class ArticleComment {
+public class ArticleComment extends AuditingFields{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,14 +33,7 @@ public class ArticleComment {
     @Column(length = 10000)
     private String content;         // 댓글 내용
 
-    @CreatedDate
-    private LocalDateTime createdAt;
-    @CreatedBy
-    private String createdBy;
-    @LastModifiedDate
-    private LocalDateTime modifiedAt;
-    @LastModifiedBy
-    private String modifiedBy;
+
     protected ArticleComment() {
 
     }
