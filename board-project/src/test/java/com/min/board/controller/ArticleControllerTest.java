@@ -29,7 +29,7 @@ class ArticleControllerTest {
         //when & then
         mvc.perform(get("/articles"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
                 .andExpect(view().name("articles/index"))   // 실제 view에 이름을 검색한다.
                 .andExpect(model().attributeExists("articles"));    //"articles"라는 키 값이 있는지 확인한다.
 
@@ -41,7 +41,7 @@ class ArticleControllerTest {
         //when & then
         mvc.perform(get("/articles/1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
                 .andExpect(view().name("articles/detail"))   // 실제 view에 이름을 검색한다.
                 .andExpect(model().attributeExists("article"))    //"article"라는 키 값이 있는지 확인한다.
                 .andExpect(model().attributeExists("articleComments"));    //article에는 댓글들도 포함되어있다.
@@ -55,7 +55,7 @@ class ArticleControllerTest {
         //when & then
         mvc.perform(get("/articles/search"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
                 .andExpect(view().name("articles/search"));   // 실제 view에 이름을 검색한다.
 
 
@@ -66,7 +66,7 @@ class ArticleControllerTest {
         //when & then
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(content().contentType(MediaType.TEXT_HTML))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
                 .andExpect(view().name("articles/search-hashtag"));   // 실제 view에 이름을 검색한다.
     }
 }
