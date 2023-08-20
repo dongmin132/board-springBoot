@@ -21,12 +21,10 @@ spring:
       hibernate.default_batch_fetch_size: 100
   h2.console.enabled: true
   sql.init.mode: always
+
   thymeleaf3.decoupled-logic: true
 
-
-
-
-
-
-
+  data.rest:
+    base-path: /api
+    detection-strategy: annotated
 
