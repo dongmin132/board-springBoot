@@ -20,6 +20,7 @@ public interface ArticleCommentRepository extends
     default void customize(QuerydslBindings bindings, QArticleComment root) {
         bindings.excludeUnlistedProperties(true);        //선택적으로 검색이 가능하도록 하는 것
         bindings.including(root.content, root.createdAt, root.createdBy);
+        bindings.bind(root.content).first(StringExpression::containsIgnoreCase);
         bindings.bind(root.createdAt).first(DateTimeExpression::eq);
         bindings.bind(root.createdBy).first(StringExpression::containsIgnoreCase);
     }
