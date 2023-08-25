@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
-@ToString
+@ToString(callSuper = true)
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @Table(indexes = {
@@ -27,10 +27,15 @@ public class ArticleComment extends AuditingFields{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Setter
-    @ManyToOne()
+    @ManyToOne(optional = false)        //반드시 연관관계 매핑이 이루어져야 한다는 뜻
     private Article article;        //게시글 ID
+
     @Setter
-    @Column(length = 10000)
+    @ManyToOne
+    private UserAccount userAccount;
+
+    @Setter
+    @Column(nullable = false, length = 500)
     private String content;         // 댓글 내용
 
 
@@ -38,13 +43,14 @@ public class ArticleComment extends AuditingFields{
 
     }
 
-    private ArticleComment(Article article, String content) {
+    private ArticleComment(Article article, String content,UserAccount userAccount) {
         this.article = article;
         this.content = content;
+        this.userAccount = userAccount;
     }
 
-    public static ArticleComment of(Article article, String content) {
-        return new ArticleComment(article, content);
+    public static ArticleComment of(Article article, String content, UserAccount userAccount) {
+        return new ArticleComment(article, content,userAccount);
     }
 
     @Override

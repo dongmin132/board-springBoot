@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Getter
-@ToString
+@ToString(callSuper = true) //부모 클래스의 ToString도 볼 수 있다
 @Table(indexes = {
         @Index(columnList = "title"),
         @Index(columnList = "hashtag"),
@@ -30,23 +30,18 @@ public class Article extends AuditingFields{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter @ManyToOne(optional=false)
+    private UserAccount userAccount;    // 유저 정보(ID)
+
     @Setter @Column(nullable = false)
     private String title;       //제목
     @Setter @Column(nullable = false,length = 10000)
     private String content;     //내용
     @Setter private String hashtag;     //해시태그로 검색하기
 
-    @CreatedDate
-    private LocalDateTime createdAt;
-    @CreatedBy
-    private String createdBy;
-    @LastModifiedDate
-    private LocalDateTime modifiedAt;
-    @LastModifiedBy
-    private String modifiedBy;
 
     @ToString.Exclude
-    @OrderBy("id")
+    @OrderBy("createdAt DESC")      //시간순 정렬로 댓글리스트를 뽑는것
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL)
     private final Set<ArticleComment> articleComments = new LinkedHashSet<>();      //중복을 허용하지 않고 모아서 컬렉션으로 보겠다는 의도의 Set<>
 
@@ -55,14 +50,15 @@ public class Article extends AuditingFields{
 
     }
 
-    private Article(String title, String content, String hashtag) {         //접근 제어자를 private으로 둠으로써 팩토리 메서드로 받아서 사용하게 설정
+    private Article(UserAccount userAccount, String title, String content, String hashtag) {         //접근 제어자를 private으로 둠으로써 팩토리 메서드로 받아서 사용하게 설정
+        this.userAccount = userAccount;
         this.title = title;
         this.content = content;
         this.hashtag = hashtag;
     }
 
-    public static Article of(String title, String content, String hashtag) {
-        return new Article(title, content, hashtag);
+    public static Article of(UserAccount userAccount, String title, String content, String hashtag) {
+        return new Article(userAccount, title, content, hashtag);
     }
 
     @Override

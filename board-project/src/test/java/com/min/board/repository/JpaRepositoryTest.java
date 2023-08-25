@@ -2,6 +2,7 @@ package com.min.board.repository;
 
 import com.min.board.config.JpaConfig;
 import com.min.board.domain.Article;
+import com.min.board.domain.UserAccount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +17,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(JpaConfig.class)
 @DataJpaTest
 class JpaRepositoryTest {
-    private final ArticleRepository articleRepository;
-    private final ArticleCommentRepository articleCommentRepository;
-
-    JpaRepositoryTest(
-            @Autowired ArticleRepository articleRepository,
-            @Autowired ArticleCommentRepository articleCommentRepository) {
-        this.articleRepository = articleRepository;
-        this.articleCommentRepository = articleCommentRepository;
-    }
+    @Autowired      //@Autowired를 활용한 주입
+    ArticleRepository articleRepository;
+    @Autowired
+    ArticleCommentRepository articleCommentRepository;
+    @Autowired
+    UserAccountRepository userAccountRepository;
 
     @DisplayName("select 테스트")
     @Test
@@ -43,8 +41,10 @@ class JpaRepositoryTest {
     void givenTestData_whenSelecting_thenWorksFine2() {
         // Given
         Long previousCount = articleRepository.count();
+        UserAccount userAccount = userAccountRepository.save(UserAccount.of("kdm", "pw", null, null, null));
+        Article article = Article.of(userAccount, "userAccount", "new content", "#spring");
         // When
-        Article saveArticle = articleRepository.save(Article.of("new article", "new content", "new hashtag"));
+        Article saveArticle = articleRepository.save(article);
 
         // Then
         assertThat(articleRepository.count()).isEqualTo(previousCount+1);
