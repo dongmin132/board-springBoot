@@ -39,14 +39,16 @@ class ArticleServiceTest {
     void givenNoSearchParameters_whenSearchingArticles_thenReturnsArticlePage() {
         // Given
         Pageable pageable = Pageable.ofSize(20);
-        given(articleRepository.findAll(pageable)).willReturn(Page.empty());
+        given(articleRepository.findAll(pageable)).willReturn(Page.empty());        // articleRepository.findAll(pageable)이 실행될때 빈페이지를 반환하도록 설정
+                                                                                    // Mock을 활용하여 실제 디비에 들어가서 값을 찾는 것이 아닌 상황을 연출한다.
+                                                                                    // 검색 결과가 없는 상황임.
 
         // When
         Page<ArticleDto> articles = sut.searchArticles(null, null, pageable);
 
         // Then
         assertThat(articles).isEmpty();
-        then(articleRepository).should().findAll(pageable);
+        then(articleRepository).should().findAll(pageable);     //articleRepository의 findAll() 메서드가 pageable을 인자로 받아 호출되었는지 확인
     }
 
     @DisplayName("검색어와 함께 게시글을 검색하면, 게시글 페이지를 반환한다.")
@@ -56,14 +58,14 @@ class ArticleServiceTest {
         SearchType searchType = SearchType.TITLE;
         String searchKeyword = "title";
         Pageable pageable = Pageable.ofSize(20);
-        given(articleRepository.findByTitle(searchKeyword, pageable)).willReturn(Page.empty());
+        given(articleRepository.findByTitleContaining(searchKeyword, pageable)).willReturn(Page.empty());
 
         // When
         Page<ArticleDto> articles = sut.searchArticles(searchType, searchKeyword, pageable);
 
         // Then
         assertThat(articles).isEmpty();
-        then(articleRepository).should().findByTitle(searchKeyword, pageable);
+        then(articleRepository).should().findByTitleContaining(searchKeyword, pageable);
     }
 
     @DisplayName("게시글을 조회하면, 게시글을 반환한다.")
@@ -79,7 +81,7 @@ class ArticleServiceTest {
 
         // Then
         assertThat(dto)
-                .hasFieldOrPropertyWithValue("title", article.getTitle())
+                .hasFieldOrPropertyWithValue("title", article.getTitle())       //dto 객체의 title 필드의 값이 aritlce.getTitle()의 값과 같은지 확인
                 .hasFieldOrPropertyWithValue("content", article.getContent())
                 .hasFieldOrPropertyWithValue("hashtag", article.getHashtag());
         then(articleRepository).should().findById(articleId);
