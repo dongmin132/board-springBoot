@@ -1,15 +1,16 @@
 package com.min.board.controller;
 
+import com.min.board.domain.type.SearchType;
+import com.min.board.dto.response.ArticleResponse;
+import com.min.board.dto.response.ArticleWithCommentsResponse;
+import com.min.board.service.ArticleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.awt.image.ImageProducer;
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 /*
     /articles
@@ -17,19 +18,29 @@ import java.util.List;
     /articles/serarch
     /articles/search-hashtag
  */
+@RequiredArgsConstructor
 @RequestMapping("/articles")
 @Controller
 public class ArticleController {
+
+    private final ArticleService articleService;
+
     @GetMapping
-    public String articles(Model model) {
-        model.addAttribute("articles", List.of());
+    public String articles(
+            @RequestParam(required = false) SearchType searchType,
+            @RequestParam(required = false) String searchValue,
+            @PageableDefault(size = 10, sort="createdAt",direction = Sort.Direction.DESC) Pageable pageable,
+            Model model) {
+        model.addAttribute("articles", articleService.searchArticles(searchType,searchValue,pageable).map(ArticleResponse::from));
+
         return "articles/index";
     }
 
     @GetMapping("/{articleId}")
     public String article(@PathVariable Long articleId, Model model) {
-        model.addAttribute("article", "null");  //TODO: 나중에 실제 값을 넣어줘야 한다.
-        model.addAttribute("articleComments", List.of());
+        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticle(articleId));
+        model.addAttribute("article", article);
+        model.addAttribute("articleComments", article.articleCommentsResponse());
         return "articles/detail";
     }
 }
