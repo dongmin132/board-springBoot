@@ -1,6 +1,7 @@
 package com.min.board.controller;
 
 import com.min.board.config.SecurityConfig;
+import com.min.board.domain.type.SearchType;
 import com.min.board.dto.ArticleCommentDto;
 import com.min.board.dto.ArticleDto;
 import com.min.board.dto.ArticleWithCommentsDto;
@@ -63,6 +64,28 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("articles"))    //"articles"라는 키 값이 있는지 확인한다.
                 .andExpect(model().attributeExists("paginationBarNumbers"));    //"articles"라는 키 값이 있는지 확인한다.
         then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
+    }
+
+    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @Test
+    public void givenSearchKeyword_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
+        //Given
+        SearchType searchType = SearchType.TITLE;
+        String searchValue = "title";
+        given(articleService.searchArticles(eq(searchType),eq(searchValue),any(Pageable.class))).willReturn(Page.empty());  //searchType과 searchValue는 주어진 값과 일치해야 하면 any는 Pageable을 구성한 아무 객체가 와도 상관없다는 뜻
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1,2,3,4,5));   // anyInt(): 아무 숫자나 넣어줘라
+        //when & then
+        mvc.perform(get("/articles")
+                        .queryParam("searchType",searchType.name())
+                        .queryParam("searchValue",searchValue)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
+                .andExpect(view().name("articles/index"))   // 실제 view에 이름을 검색한다.
+                .andExpect(model().attributeExists("articles"))    //"articles"라는 키 값이 있는지 확인한다.
+                .andExpect(model().attributeExists("searchTypes"));
+        then(articleService).should().searchArticles(eq(searchType), eq(searchValue), any(Pageable.class));
         then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
