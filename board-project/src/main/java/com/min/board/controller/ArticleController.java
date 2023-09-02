@@ -20,7 +20,7 @@ import java.util.List;
     /articles
     /articles/{article-id}
     /articles/serarch
-    /articles/search-hashtag
+    /articles/search-hashtag.html
  */
 @RequiredArgsConstructor
 @RequestMapping("/articles")
@@ -34,7 +34,7 @@ public class ArticleController {
     public String articles(
             @RequestParam(required = false) SearchType searchType,
             @RequestParam(required = false) String searchValue,
-            @PageableDefault(size = 10, sort="createdAt",direction = Sort.Direction.DESC) Pageable pageable,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Model model) {
         Page<ArticleResponse> articles = articleService.searchArticles(searchType, searchValue, pageable).map(ArticleResponse::from);
         List<Integer> barNumbers = paginationService.getPaginationBarNumbers(pageable.getPageNumber(), articles.getTotalPages());
@@ -50,5 +50,23 @@ public class ArticleController {
         model.addAttribute("article", article);
         model.addAttribute("articleComments", article.articleCommentsResponse());
         return "articles/detail";
+    }
+
+    @GetMapping("/search-hashtag")
+    public String searchHashtag(
+            @RequestParam(required = false) String searchValue,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Model model
+    ) {
+        Page<ArticleResponse> articles = articleService.searchArticlesViaHashtag(searchValue, pageable).map(ArticleResponse::from);
+        List<Integer> barNumbers = paginationService.getPaginationBarNumbers(pageable.getPageNumber(), articles.getTotalPages());
+        List<String> hashtags = articleService.getHashtags();
+
+        model.addAttribute("articles", articles);
+        model.addAttribute("hashtags", hashtags);
+        model.addAttribute("paginationBarNumbers", barNumbers);
+        model.addAttribute("searchType", SearchType.HASHTAG); //array타입으로 보냄. 검색어의 종류를 나타냄.
+
+        return "articles/search-hashtag.html";
     }
 }

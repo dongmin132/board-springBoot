@@ -152,16 +152,53 @@ class ArticleControllerTest {
 
 
     }
-    @Disabled
-    @DisplayName("[view] [GET] 게시글 해시태그 검색 전용 페이지 - 정상 호출")
+
+    @DisplayName("[view] [GET] 게시글 해시태그 검색 전용 페이지 - 정상 호출, 해시태그 입력X")
     @Test
-    public void givenNothing_whenRequestingArticleHashtagSearchView_thenReturnsArticlesView() throws Exception {
+    public void givenNothing_whenRequestingArticleHashtagSearchView_thenReturnsArticleSearchHashtagView() throws Exception {
+        //Given
+        given(articleService.searchArticlesViaHashtag(eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
+        given(articleService.getHashtags()).willReturn(List.of("#java", "#spring", "#boot"));
+
         //when & then
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/search-hashtag"));   // 실제 view에 이름을 검색한다.
+                .andExpect(view().name("articles/search-hashtag.html"))   // 실제 view에 이름을 검색한다.
+                .andExpect(model().attribute("articles", Page.empty()))
+                .andExpect(model().attributeExists("hashtags"))     //모델에 존재만을 확인하는 것.
+                .andExpect(model().attributeExists("paginationBarNumbers"));
+        then(articleService).should().searchArticlesViaHashtag(eq(null), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
+        then(articleService).should().getHashtags();
+
     }
+
+    @DisplayName("[view] [GET] 게시글 해시태그 검색 전용 페이지 - 정상 호출, 해시태그 입력")
+    @Test
+    public void givenHashtag_whenRequestingArticleHashtagSearchView_thenReturnsArticleSearchHashtagView() throws Exception {
+        //Given
+        String hashtag = "#java";
+        given(articleService.searchArticlesViaHashtag(eq(hashtag), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
+        given(articleService.getHashtags()).willReturn(List.of("#java", "#spring", "#boot"));
+        //when & then
+        mvc.perform(get("/articles/search-hashtag")
+                        .queryParam("searchValue",hashtag)
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
+                .andExpect(view().name("articles/search-hashtag.html"))   // 실제 view에 이름을 검색한다.
+                .andExpect(model().attribute("articles", Page.empty()))
+                .andExpect(model().attributeExists("hashtags"))     //모델에 존재만을 확인하는 것.
+                .andExpect(model().attributeExists("paginationBarNumbers"));
+        then(articleService).should().searchArticlesViaHashtag(eq(hashtag), any(Pageable.class));
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
+        then(articleService).should().getHashtags();
+
+    }
+
     private ArticleWithCommentsDto createArticleWithCommentsDto() {
         return ArticleWithCommentsDto.of(
                 1L,
