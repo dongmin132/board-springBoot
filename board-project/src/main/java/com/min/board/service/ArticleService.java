@@ -1,10 +1,13 @@
 package com.min.board.service;
 
 import com.min.board.domain.Article;
-import com.min.board.domain.type.SearchType;
+import com.min.board.domain.UserAccount;
+import com.min.board.domain.constant.SearchType;
 import com.min.board.dto.ArticleDto;
 import com.min.board.dto.ArticleWithCommentsDto;
+import com.min.board.dto.UserAccountDto;
 import com.min.board.repository.ArticleRepository;
+import com.min.board.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +24,7 @@ import java.util.List;
 @Service
 public class ArticleService {
     private final ArticleRepository articleRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Transactional(readOnly = true)
     public Page<ArticleDto> searchArticles(SearchType searchType, String searchKeyword, Pageable pageable) {
@@ -43,22 +47,33 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public ArticleWithCommentsDto getArticle(long articleId) {
-        Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
-        return ArticleWithCommentsDto.toDto(article);
+    public ArticleDto getArticle(long articleId) {
+//        Article article = articleRepository.findById(articleId)
+//                .orElseThrow(() -> new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
+//        return ArticleWithCommentsDto.toDto(article);
 
+        return articleRepository.findById(articleId)
+                .map(ArticleDto::toDto)
+                .orElseThrow(() -> new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
+    }
+    
+    @Transactional(readOnly = true)
+    public ArticleWithCommentsDto getArticleWithComments(Long articleId){
+        return articleRepository.findById(articleId)
+                .map(ArticleWithCommentsDto::toDto)
+                .orElseThrow(()->new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
     }
 
     public void saveArticle(ArticleDto dto) {
-        articleRepository.save(dto.toEntity());
+        UserAccount userAccount = userAccountRepository.getReferenceById(dto.userAccountDto().userId());
+        articleRepository.save(dto.toEntity(userAccount));
     }
 
-    public void updateArticle(ArticleDto dto) {     //클래스 레벨에 트랜잭셔널에 의해서 메서드 단위로 트랜잭셔널이 묶여있어서
+    public void updateArticle(Long articleId, ArticleDto dto) {     //클래스 레벨에 트랜잭셔널에 의해서 메서드 단위로 트랜잭셔널이 묶여있어서
         //영속성 컨텍스트가 엔티티에 변함을 감지하고 그것에 대해서 쿼리를 날리게 된다.
         //즉, save()를 안적어도 된다.
         try {
-            Article article = articleRepository.getReferenceById(dto.id());
+            Article article = articleRepository.getReferenceById(articleId);
             if (dto.title() != null) article.setTitle(dto.title());
             if (dto.content() != null) article.setContent(dto.content());
             article.setHashtag(dto.hashtag());
