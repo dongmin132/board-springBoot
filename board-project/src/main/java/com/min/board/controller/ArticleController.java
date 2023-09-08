@@ -1,6 +1,10 @@
 package com.min.board.controller;
 
-import com.min.board.domain.type.SearchType;
+import com.min.board.domain.constant.FormStatus;
+import com.min.board.domain.constant.SearchType;
+import com.min.board.dto.ArticleDto;
+import com.min.board.dto.UserAccountDto;
+import com.min.board.dto.request.ArticleRequest;
 import com.min.board.dto.response.ArticleResponse;
 import com.min.board.dto.response.ArticleWithCommentsResponse;
 import com.min.board.service.ArticleService;
@@ -46,14 +50,14 @@ public class ArticleController {
 
     @GetMapping("/{articleId}")
     public String article(@PathVariable Long articleId, Model model) {
-        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticle(articleId));
+        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticleWithComments(articleId));
         model.addAttribute("article", article);
         model.addAttribute("articleComments", article.articleCommentsResponse());
         return "articles/detail";
     }
 
     @GetMapping("/search-hashtag")
-    public String searchHashtag(
+    public String searchArticleHashtag(
             @RequestParam(required = false) String searchValue,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Model model
@@ -67,6 +71,46 @@ public class ArticleController {
         model.addAttribute("paginationBarNumbers", barNumbers);
         model.addAttribute("searchType", SearchType.HASHTAG); //array타입으로 보냄. 검색어의 종류를 나타냄.
 
-        return "articles/search-hashtag.html";
+        return "articles/search-hashtag";
+    }
+
+    @GetMapping("/form")
+    public String articleForm(Model model) {
+        model.addAttribute("formStatus", FormStatus.CREATE);
+        return "articles/form";
+    }
+
+    @PostMapping("/form")
+    public String postNewArticle(@ModelAttribute ArticleRequest articleRequest) {
+        articleService.saveArticle(articleRequest.toArticleDto(UserAccountDto.of(
+                "kdm", "asdf1234", "kdm@mail.com", "kdmNickname", "memo"
+        )));
+        return "redirect:/articles";
+    }
+
+    @GetMapping("/{articleId}/form")
+    public String updateArticleForm(@PathVariable Long articleId, Model model) {
+        ArticleResponse article = ArticleResponse.from(articleService.getArticle(articleId));
+
+        model.addAttribute("article", article);
+        model.addAttribute("formStatus", FormStatus.UPDATE);
+
+        return "articles/form";
+    }
+
+    @PostMapping("/{articleId}/form")
+    public String updateArticle(@PathVariable Long articleId, ArticleRequest articleRequest) {
+        articleService.updateArticle(articleId, articleRequest.toArticleDto(UserAccountDto.of(
+                "kdm", "asdf1234", "kdm@mail.com", "kdmNickname", "memo", null, null, null, null
+        )));
+
+        return "redirect:/articles";
+    }
+
+    @PostMapping("/{articleId}/delete")
+    public String deleteArticle(@PathVariable Long articleId) {
+        articleService.deleteArticle(articleId);
+
+        return "redirect:/articles";
     }
 }
