@@ -106,7 +106,7 @@ public class ArticleController {
     ) {
         articleService.updateArticle(articleId, articleRequest.toArticleDto(principal.toUserAccountDto()));
 
-        return "redirect:/articles";
+        return "redirect:/articles/"+articleId;
     }
 
     @PostMapping("/{articleId}/delete")
