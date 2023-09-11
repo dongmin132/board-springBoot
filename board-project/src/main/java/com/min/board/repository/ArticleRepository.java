@@ -26,6 +26,7 @@ public interface ArticleRepository extends
     Page<Article> findByUserAccount_NicknameContaining(String nickname, Pageable pageable);
     Page<Article> findByHashtag(String hashtag, Pageable pageable);
 
+    void deleteByIdAndUserAccount_UserId(Long articleId, String userId);
     @Override
             default void customize(QuerydslBindings bindings, QArticle root) {
         bindings.excludeUnlistedProperties(true);        //선택적으로 검색이 가능하도록 하는 것

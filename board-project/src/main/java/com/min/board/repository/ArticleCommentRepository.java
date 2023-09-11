@@ -20,6 +20,8 @@ public interface ArticleCommentRepository extends
         QuerydslBinderCustomizer<QArticleComment> {
 
     List<ArticleComment> findByArticle_Id(Long articleId);      //Article 엔티티에 Id로 찾는다.
+
+    void deleteByIdAndUserAccount_UserId(Long articleCommentId, String userId);
     @Override
     default void customize(QuerydslBindings bindings, QArticleComment root) {
         bindings.excludeUnlistedProperties(true);        //선택적으로 검색이 가능하도록 하는 것

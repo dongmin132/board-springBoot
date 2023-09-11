@@ -67,7 +67,7 @@ public class Article extends AuditingFields{
     public boolean equals(Object o) {       //동일성 검사를 실행함.
         if (this == o) return true;
         if (!(o instanceof Article article)) return false;
-        return id != null && id.equals(article.id);
+        return id != null && id.equals(article.getId());
     }
 
     @Override

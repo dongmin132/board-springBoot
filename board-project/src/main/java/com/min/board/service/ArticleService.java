@@ -56,7 +56,7 @@ public class ArticleService {
                 .map(ArticleDto::toDto)
                 .orElseThrow(() -> new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
     }
-    
+
     @Transactional(readOnly = true)
     public ArticleWithCommentsDto getArticleWithComments(Long articleId){
         return articleRepository.findById(articleId)
@@ -74,17 +74,22 @@ public class ArticleService {
         //즉, save()를 안적어도 된다.
         try {
             Article article = articleRepository.getReferenceById(articleId);
-            if (dto.title() != null) article.setTitle(dto.title());
-            if (dto.content() != null) article.setContent(dto.content());
-            article.setHashtag(dto.hashtag());
+            UserAccount userAccount = userAccountRepository.getReferenceById(dto.userAccountDto().userId());
+
+            if (article.getUserAccount().equals(userAccount)) {
+                if (dto.title() != null) article.setTitle(dto.title());
+                if (dto.content() != null) article.setContent(dto.content());
+                article.setHashtag(dto.hashtag());
+            }
+
         } catch (EntityNotFoundException e) {
-            log.warn("게시글 업데이트 실패. 게시글을 찾을 수 없습니다 - dto: {}",dto);
+            log.warn("게시글 업데이트 실패. 게시글을 수정하는데 필요한 정보를 찾을 수 없습니다 - error-message: "+ e.getLocalizedMessage());
         }
 
     }
 
-    public void deleteArticle(long articleId) {
-        articleRepository.deleteById(articleId);
+    public void deleteArticle(long articleId, String userId) {
+        articleRepository.deleteByIdAndUserAccount_UserId(articleId,userId);
     }
 
     @Transactional(readOnly = true)
