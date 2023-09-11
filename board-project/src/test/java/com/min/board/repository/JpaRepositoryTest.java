@@ -7,14 +7,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Jpa 연결 테스트")
-@Import(JpaConfig.class)
+@Import(JpaRepositoryTest.TestJpaConfig.class)
 @DataJpaTest
 class JpaRepositoryTest {
     @Autowired      //@Autowired를 활용한 주입
@@ -47,7 +52,7 @@ class JpaRepositoryTest {
         Article saveArticle = articleRepository.save(article);
 
         // Then
-        assertThat(articleRepository.count()).isEqualTo(previousCount+1);
+        assertThat(articleRepository.count()).isEqualTo(previousCount + 1);
 
 
     }
@@ -64,7 +69,7 @@ class JpaRepositoryTest {
         articleRepository.flush();
 
         // Then
-        assertThat(saveArticle).hasFieldOrPropertyWithValue("hashtag",updatedHashtag);
+        assertThat(saveArticle).hasFieldOrPropertyWithValue("hashtag", updatedHashtag);
 
 
     }
@@ -86,6 +91,15 @@ class JpaRepositoryTest {
         assertThat(articleCommentRepository.count()).isEqualTo(previousArticleCommentCount - deletedCommentsSize);
 
 
+    }
+
+    @EnableJpaAuditing
+    @TestConfiguration      //Test할 때만 실행
+    public static class TestJpaConfig {     //
+        @Bean
+        public AuditorAware<String> auditorAware() {        //createBy가 저절로 만들어지지 않기 때문에 Auditing을 테스트 용으로 하나만든다.
+            return () -> Optional.of("kdm");
+        }
     }
 
 }
