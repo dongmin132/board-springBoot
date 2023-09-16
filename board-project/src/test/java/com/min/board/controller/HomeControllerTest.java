@@ -1,6 +1,7 @@
 package com.min.board.controller;
 
 import com.min.board.config.SecurityConfig;
+import com.min.board.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(SecurityConfig.class)
+@Import(TestSecurityConfig.class)
 @WebMvcTest(HomeController.class)
 class HomeControllerTest {
     private final MockMvc mvc;
@@ -31,6 +32,4 @@ class HomeControllerTest {
                 .andExpect(forwardedUrl("/articles"))
                 .andDo(MockMvcResultHandlers.print());
     }
-
-
 }
