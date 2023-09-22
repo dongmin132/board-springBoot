@@ -64,6 +64,11 @@ public class ArticleService {
                 .orElseThrow(()->new EntityNotFoundException("게시글이 없습니다 - articleId: " + articleId));
     }
 
+    @Transactional(readOnly = true)
+    public long getArticleCount() {
+        return articleRepository.count();
+    }
+
     public void saveArticle(ArticleDto dto) {
         UserAccount userAccount = userAccountRepository.getReferenceById(dto.userAccountDto().userId());
         articleRepository.save(dto.toEntity(userAccount));
