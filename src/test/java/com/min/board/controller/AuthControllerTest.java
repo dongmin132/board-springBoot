@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestComponent;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("View 컨트롤러 - 인증")
 @Import(TestSecurityConfig.class)
-@WebMvcTest(AuthControllerTest.class)
+@WebMvcTest(AuthControllerTest.EmptyController.class)
 public class AuthControllerTest {
     private final MockMvc mvc;
 
@@ -32,4 +33,9 @@ public class AuthControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
     }
+    /**
+     * 어떤 컨트롤러도 필요하지 않은 테스트임을 나타내기 위해 테스트용 빈 컴포넌트를 사용함.
+     */
+    @TestComponent
+    static class EmptyController {}
 }
