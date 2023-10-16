@@ -1,3 +1,4 @@
+
 debug: false
 management.endpoints.web.exposure.include: "*"
 
@@ -28,7 +29,8 @@ spring:
   data.rest:
     base-path: /api
     detection-strategy: annotated
-
+server:
+  port: 8081
 ---
 
 spring:
