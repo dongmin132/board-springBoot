@@ -5,6 +5,7 @@ import com.min.board.domain.constant.FormStatus;
 import com.min.board.domain.constant.SearchType;
 import com.min.board.dto.ArticleDto;
 import com.min.board.dto.ArticleWithCommentsDto;
+import com.min.board.dto.HashtagDto;
 import com.min.board.dto.UserAccountDto;
 import com.min.board.dto.request.ArticleRequest;
 import com.min.board.dto.response.ArticleResponse;
@@ -43,64 +44,73 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("View 컨트롤러 - 게시글")
 @Import({TestSecurityConfig.class, FormDataEncoder.class})
-@WebMvcTest(ArticleController.class)        //입력한 컨트롤러만 체크해서 테스트할 수 있다.
+@WebMvcTest(ArticleController.class)
 class ArticleControllerTest {
+
     private final MockMvc mvc;
+
     private final FormDataEncoder formDataEncoder;
-    @MockBean
-    private ArticleService articleService;      //필드 주입
-    @MockBean
-    private PaginationService paginationService;
 
-    public ArticleControllerTest(@Autowired MockMvc mvc,
-                                 @Autowired FormDataEncoder formDataEncoder) {      //테스트에서는 @Autowired를 붙여줘야 한다.
-        this.mvc=mvc;
+    @MockBean private ArticleService articleService;
+    @MockBean private PaginationService paginationService;
+
+
+    ArticleControllerTest(
+            @Autowired MockMvc mvc,
+            @Autowired FormDataEncoder formDataEncoder
+    ) {
+        this.mvc = mvc;
         this.formDataEncoder = formDataEncoder;
-    }       //생성자 주입
+    }
 
-    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 정상 호출")
+
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 정상 호출")
     @Test
-    public void givenNothing_whenRequestingArticlesView_thenReturnsArticlesView() throws Exception {
-        //Given
-        given(articleService.searchArticles(eq(null),eq(null),any(Pageable.class))).willReturn(Page.empty());
-        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1,2,3,4,5));   // anyInt(): 아무 숫자나 넣어줘라
-        //when & then
+    void givenNothing_whenRequestingArticlesView_thenReturnsArticlesView() throws Exception {
+        // Given
+        given(articleService.searchArticles(eq(null), eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
+
+        // When & Then
         mvc.perform(get("/articles"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/index"))   // 실제 view에 이름을 검색한다.
-                .andExpect(model().attributeExists("articles"))    //"articles"라는 키 값이 있는지 확인한다.
-                .andExpect(model().attributeExists("paginationBarNumbers"));    //"articles"라는 키 값이 있는지 확인한다.
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/index"))
+                .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attributeExists("searchTypes"))
+                .andExpect(model().attribute("searchTypeHashtag", SearchType.HASHTAG));
         then(articleService).should().searchArticles(eq(null), eq(null), any(Pageable.class));
         then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-    @DisplayName("[view] [GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
+    @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 검색어와 함께 호출")
     @Test
-    public void givenSearchKeyword_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
-        //Given
+    void givenSearchKeyword_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
+        // Given
         SearchType searchType = SearchType.TITLE;
         String searchValue = "title";
-        given(articleService.searchArticles(eq(searchType),eq(searchValue),any(Pageable.class))).willReturn(Page.empty());  //searchType과 searchValue는 주어진 값과 일치해야 하면 any는 Pageable을 구성한 아무 객체가 와도 상관없다는 뜻
-        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1,2,3,4,5));   // anyInt(): 아무 숫자나 넣어줘라
-        //when & then
-        mvc.perform(get("/articles")
-                        .queryParam("searchType",searchType.name())
-                        .queryParam("searchValue",searchValue)
+        given(articleService.searchArticles(eq(searchType), eq(searchValue), any(Pageable.class))).willReturn(Page.empty());
+        given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(0, 1, 2, 3, 4));
+
+        // When & Then
+        mvc.perform(
+                        get("/articles")
+                                .queryParam("searchType", searchType.name())
+                                .queryParam("searchValue", searchValue)
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/index"))   // 실제 view에 이름을 검색한다.
-                .andExpect(model().attributeExists("articles"))    //"articles"라는 키 값이 있는지 확인한다.
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/index"))
+                .andExpect(model().attributeExists("articles"))
                 .andExpect(model().attributeExists("searchTypes"));
         then(articleService).should().searchArticles(eq(searchType), eq(searchValue), any(Pageable.class));
         then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-
     @DisplayName("[view][GET] 게시글 리스트 (게시판) 페이지 - 페이징, 정렬 기능")
     @Test
-    void givenPagingAndSortingParams_whenSearchingArticlesPage_thenReturnsArticlesPage() throws Exception {
+    void givenPagingAndSortingParams_whenSearchingArticlesView_thenReturnsArticlesView() throws Exception {
         // Given
         String sortName = "title";
         String direction = "desc";
@@ -127,102 +137,113 @@ class ArticleControllerTest {
         then(paginationService).should().getPaginationBarNumbers(pageable.getPageNumber(), Page.empty().getTotalPages());
     }
 
-    @DisplayName("[view] [GET] 게시글 페이지 - 인증 없을 땐 로그인 페이지로 이동")
+    @DisplayName("[view][GET] 게시글 페이지 - 인증 없을 땐 로그인 페이지로 이동")
     @Test
-    public void givenNothing_whenRequestingArticlePage_thenRedirectsToLoginPage() throws Exception {
-        //Given
+    void givenNothing_whenRequestingArticlePage_thenRedirectsToLoginPage() throws Exception {
+        // Given
         long articleId = 1L;
-        //When & Then
+
+        // When & Then
         mvc.perform(get("/articles/" + articleId))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
         then(articleService).shouldHaveNoInteractions();
+        then(articleService).shouldHaveNoInteractions();
     }
 
     @WithMockUser
-    @DisplayName("[view] [GET] 게시글 상세 페이지 - 정상 호출, 인증된 사용자")
+    @DisplayName("[view][GET] 게시글 페이지 - 정상 호출, 인증된 사용자")
     @Test
-    public void givenNothing_whenRequestingArticleView_thenReturnsArticlesView() throws Exception {
-        //Given
-        Long articleId=1L;
+    void givenAuthorizedUser_whenRequestingArticleView_thenReturnsArticleView() throws Exception {
+        // Given
+        Long articleId = 1L;
+        long totalCount = 1L;
         given(articleService.getArticleWithComments(articleId)).willReturn(createArticleWithCommentsDto());
-        //when & then
+        given(articleService.getArticleCount()).willReturn(totalCount);
+
+        // When & Then
         mvc.perform(get("/articles/" + articleId))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/detail"))   // 실제 view에 이름을 검색한다.
-                .andExpect(model().attributeExists("article"))    //"article"라는 키 값이 있는지 확인한다.
-                .andExpect(model().attributeExists("articleComments"));    //article에는 댓글들도 포함되어있다.
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/detail"))
+                .andExpect(model().attributeExists("article"))
+                .andExpect(model().attributeExists("articleComments"))
+                .andExpect(model().attribute("totalCount", totalCount))
+                .andExpect(model().attribute("searchTypeHashtag", SearchType.HASHTAG));
         then(articleService).should().getArticleWithComments(articleId);
+        then(articleService).should().getArticleCount();
     }
-
-
 
     @Disabled("구현 중")
-    @DisplayName("[view] [GET] 게시글 검색 전용 페이지 - 정상 호출")
+    @DisplayName("[view][GET] 게시글 검색 전용 페이지 - 정상 호출")
     @Test
-    public void givenNothing_whenRequestingArticleSearchView_thenReturnsArticlesView() throws Exception {
-        //when & then
+    void givenNothing_whenRequestingArticleSearchView_thenReturnsArticleSearchView() throws Exception {
+        // Given
+
+        // When & Then
         mvc.perform(get("/articles/search"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/search"));   // 실제 view에 이름을 검색한다.
-
-
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/search"));
     }
 
-    @DisplayName("[view] [GET] 게시글 해시태그 검색 전용 페이지 - 정상 호출, 해시태그 입력X")
+    @DisplayName("[view][GET] 게시글 해시태그 검색 페이지 - 정상 호출")
     @Test
-    public void givenNothing_whenRequestingArticleHashtagSearchView_thenReturnsArticleSearchHashtagView() throws Exception {
-        //Given
+    void givenNothing_whenRequestingArticleSearchHashtagView_thenReturnsArticleSearchHashtagView() throws Exception {
+        // Given
+        List<String> hashtags = List.of("#java", "#spring", "#boot");
         given(articleService.searchArticlesViaHashtag(eq(null), any(Pageable.class))).willReturn(Page.empty());
+        given(articleService.getHashtags()).willReturn(hashtags);
         given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
-        given(articleService.getHashtags()).willReturn(List.of("#java", "#spring", "#boot"));
 
-        //when & then
+        // When & Then
         mvc.perform(get("/articles/search-hashtag"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/search-hashtag"))   // 실제 view에 이름을 검색한다.
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/search-hashtag"))
                 .andExpect(model().attribute("articles", Page.empty()))
-                .andExpect(model().attributeExists("hashtags"))     //모델에 존재만을 확인하는 것.
-                .andExpect(model().attributeExists("paginationBarNumbers"));
+                .andExpect(model().attribute("hashtags", hashtags))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attribute("searchType", SearchType.HASHTAG));
         then(articleService).should().searchArticlesViaHashtag(eq(null), any(Pageable.class));
-        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
         then(articleService).should().getHashtags();
-
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
-    @DisplayName("[view] [GET] 게시글 해시태그 검색 전용 페이지 - 정상 호출, 해시태그 입력")
+    @DisplayName("[view][GET] 게시글 해시태그 검색 페이지 - 정상 호출, 해시태그 입력")
     @Test
-    public void givenHashtag_whenRequestingArticleHashtagSearchView_thenReturnsArticleSearchHashtagView() throws Exception {
-        //Given
+    void givenHashtag_whenRequestingArticleSearchHashtagView_thenReturnsArticleSearchHashtagView() throws Exception {
+        // Given
         String hashtag = "#java";
+        List<String> hashtags = List.of("#java", "#spring", "#boot");
         given(articleService.searchArticlesViaHashtag(eq(hashtag), any(Pageable.class))).willReturn(Page.empty());
+        given(articleService.getHashtags()).willReturn(hashtags);
         given(paginationService.getPaginationBarNumbers(anyInt(), anyInt())).willReturn(List.of(1, 2, 3, 4, 5));
-        given(articleService.getHashtags()).willReturn(List.of("#java", "#spring", "#boot"));
-        //when & then
-        mvc.perform(get("/articles/search-hashtag")
-                        .queryParam("searchValue",hashtag)
+
+        // When & Then
+        mvc.perform(
+                        get("/articles/search-hashtag")
+                                .queryParam("searchValue", hashtag)
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))    //ComplatibleWith 메서드를 사용하여 mdeiaType만을 검사하고 그 안에 옵션은 검사하지않는다.
-                .andExpect(view().name("articles/search-hashtag"))   // 실제 view에 이름을 검색한다.
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(view().name("articles/search-hashtag"))
                 .andExpect(model().attribute("articles", Page.empty()))
-                .andExpect(model().attributeExists("hashtags"))     //모델에 존재만을 확인하는 것.
-                .andExpect(model().attributeExists("paginationBarNumbers"));
+                .andExpect(model().attribute("hashtags", hashtags))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
+                .andExpect(model().attribute("searchType", SearchType.HASHTAG));
         then(articleService).should().searchArticlesViaHashtag(eq(hashtag), any(Pageable.class));
-        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
         then(articleService).should().getHashtags();
-
+        then(paginationService).should().getPaginationBarNumbers(anyInt(), anyInt());
     }
 
     @WithMockUser
     @DisplayName("[view][GET] 새 게시글 작성 페이지")
     @Test
     void givenNothing_whenRequesting_thenReturnsNewArticlePage() throws Exception {
-        //Given
-        //When & Then
+        // Given
+
+        // When & Then
         mvc.perform(get("/articles/form"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
@@ -230,15 +251,15 @@ class ArticleControllerTest {
                 .andExpect(model().attribute("formStatus", FormStatus.CREATE));
     }
 
-    @WithUserDetails(value="kdmTest",setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    @WithUserDetails(value = "kdmTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 새 게시글 등록 - 정상 호출")
     @Test
     void givenNewArticleInfo_whenRequesting_thenSavesNewArticle() throws Exception {
-        //Given
-        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content", "#new");
+        // Given
+        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content");
         willDoNothing().given(articleService).saveArticle(any(ArticleDto.class));
 
-        //When & Then
+        // When & Then
         mvc.perform(
                         post("/articles/form")
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -249,18 +270,31 @@ class ArticleControllerTest {
                 .andExpect(view().name("redirect:/articles"))
                 .andExpect(redirectedUrl("/articles"));
         then(articleService).should().saveArticle(any(ArticleDto.class));
+    }
 
+    @DisplayName("[view][GET] 게시글 수정 페이지 - 인증 없을 땐 로그인 페이지로 이동")
+    @Test
+    void givenNothing_whenRequesting_thenRedirectsToLoginPage() throws Exception {
+        // Given
+        long articleId = 1L;
+
+        // When & Then
+        mvc.perform(get("/articles/" + articleId + "/form"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+        then(articleService).shouldHaveNoInteractions();
     }
 
     @WithMockUser
-    @DisplayName("[view][GET] 게시글 수정 페이지")
+    @DisplayName("[view][GET] 게시글 수정 페이지 - 정상 호출, 인증된 사용자")
     @Test
-    void givenArticleId_whenRequesting_thenReturnsUpdatedArticlePage() throws Exception {
-        //Given
+    void givenAuthorizedUser_whenRequesting_thenReturnsUpdatedArticlePage() throws Exception {
+        // Given
         long articleId = 1L;
-        ArticleDto dto= createArticleDto();
+        ArticleDto dto = createArticleDto();
         given(articleService.getArticle(articleId)).willReturn(dto);
-        //When & Then
+
+        // When & Then
         mvc.perform(get("/articles/" + articleId + "/form"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
@@ -270,58 +304,59 @@ class ArticleControllerTest {
         then(articleService).should().getArticle(articleId);
     }
 
-    @WithUserDetails(value="kdmTest",setupBefore = TestExecutionEvent.TEST_EXECUTION)
-
+    @WithUserDetails(value = "kdmTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 게시글 수정 - 정상 호출")
     @Test
     void givenUpdatedArticleInfo_whenRequesting_thenUpdatesNewArticle() throws Exception {
-        //Given
-        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content", "#new");
-        willDoNothing().given(articleService).saveArticle(any(ArticleDto.class));
+        // Given
+        long articleId = 1L;
+        ArticleRequest articleRequest = ArticleRequest.of("new title", "new content");
+        willDoNothing().given(articleService).updateArticle(eq(articleId), any(ArticleDto.class));
 
-        //When & Then
+        // When & Then
         mvc.perform(
-                        post("/articles/form")
+                        post("/articles/" + articleId + "/form")
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .content(formDataEncoder.encode(articleRequest))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/articles"))
-                .andExpect(redirectedUrl("/articles"));
-        then(articleService).should().saveArticle(any(ArticleDto.class));
-
+                .andExpect(view().name("redirect:/articles/" + articleId))
+                .andExpect(redirectedUrl("/articles/" + articleId));
+        then(articleService).should().updateArticle(eq(articleId), any(ArticleDto.class));
     }
-    @WithUserDetails(value="kdmTest",setupBefore = TestExecutionEvent.TEST_EXECUTION)
+
+    @WithUserDetails(value = "kdmTest", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("[view][POST] 게시글 삭제 - 정상 호출")
     @Test
-    void givenArticleIdToDelete_whenRequesting_thenDeleteArticle() throws Exception {
-        //Given
+    void givenArticleIdToDelete_whenRequesting_thenDeletesArticle() throws Exception {
+        // Given
         long articleId = 1L;
         String userId = "kdmTest";
-        willDoNothing().given(articleService).deleteArticle(articleId,userId);
+        willDoNothing().given(articleService).deleteArticle(articleId, userId);
 
-        //When & Then
+        // When & Then
         mvc.perform(
-                        post("/articles/"+articleId+"/delete")
+                        post("/articles/" + articleId + "/delete")
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/articles"))
                 .andExpect(redirectedUrl("/articles"));
-        then(articleService).should().deleteArticle(articleId,userId);
-
+        then(articleService).should().deleteArticle(articleId, userId);
     }
+
 
     private ArticleDto createArticleDto() {
         return ArticleDto.of(
                 createUserAccountDto(),
                 "title",
                 "content",
-                "#java"
+                Set.of(HashtagDto.of("java"))
         );
     }
+
     private ArticleWithCommentsDto createArticleWithCommentsDto() {
 
         return ArticleWithCommentsDto.of(
@@ -330,7 +365,7 @@ class ArticleControllerTest {
                 Set.of(),
                 "title",
                 "content",
-                "#java",
+                Set.of(HashtagDto.of("java")),
                 LocalDateTime.now(),
                 "kdm",
                 LocalDateTime.now(),

@@ -5,7 +5,6 @@ import com.min.board.domain.UserAccount;
 import com.min.board.domain.constant.SearchType;
 import com.min.board.dto.ArticleDto;
 import com.min.board.dto.ArticleWithCommentsDto;
-import com.min.board.dto.UserAccountDto;
 import com.min.board.repository.ArticleRepository;
 import com.min.board.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
 import java.util.List;
 
 @Transactional
@@ -38,8 +38,10 @@ public class ArticleService {
             case ID ->
                     articleRepository.findByUserAccount_UserIdContaining(searchKeyword, pageable).map(ArticleDto::toDto);
             case CONTENT -> articleRepository.findByContentContaining(searchKeyword, pageable).map(ArticleDto::toDto);
-            case HASHTAG ->
-                    articleRepository.findByHashtag("#" + searchKeyword, pageable).map(ArticleDto::toDto);     //현재는 검색할때 #이 자동으로 들어가 있는 상태이다.             //이 문제는 추후 리팩토링할 예정
+            case HASHTAG -> articleRepository.findByHashtagNames(
+                            Arrays.stream(searchKeyword.split(" ")).toList(),
+                            pageable
+                    ).map(ArticleDto::toDto);
             case NICKNAME ->
                     articleRepository.findByUserAccount_NicknameContaining(searchKeyword, pageable).map(ArticleDto::toDto);
         };
@@ -84,7 +86,6 @@ public class ArticleService {
             if (article.getUserAccount().equals(userAccount)) {
                 if (dto.title() != null) article.setTitle(dto.title());
                 if (dto.content() != null) article.setContent(dto.content());
-                article.setHashtag(dto.hashtag());
             }
 
         } catch (EntityNotFoundException e) {
@@ -102,7 +103,7 @@ public class ArticleService {
         if (hashtag == null || hashtag.isBlank()) {
             return Page.empty(pageable);
         }
-        return articleRepository.findByHashtag(hashtag, pageable).map(ArticleDto::toDto);
+        return articleRepository.findByHashtagNames(null, pageable).map(ArticleDto::toDto);
     }
 
     public List<String> getHashtags() {

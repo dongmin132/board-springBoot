@@ -31,8 +31,7 @@ class ArticleCommentServiceTest {
 
     @Mock private ArticleRepository articleRepository;
     @Mock private ArticleCommentRepository articleCommentRepository;
-    @Mock
-    private UserAccountRepository userAccountRepository;
+    @Mock private UserAccountRepository userAccountRepository;
 
     @DisplayName("게시글 ID로 조회하면, 해당하는 댓글 리스트를 반환한다.")
     @Test
@@ -58,15 +57,16 @@ class ArticleCommentServiceTest {
         // Given
         ArticleCommentDto dto = createArticleCommentDto("댓글");
         given(articleRepository.getReferenceById(dto.articleId())).willReturn(createArticle());
-        given(articleCommentRepository.save(any(ArticleComment.class))).willReturn(null);
         given(userAccountRepository.getReferenceById(dto.userAccountDto().userId())).willReturn(createUserAccount());
+        given(articleCommentRepository.save(any(ArticleComment.class))).willReturn(null);
+
         // When
         sut.saveArticleComment(dto);
 
         // Then
         then(articleRepository).should().getReferenceById(dto.articleId());
-        then(articleCommentRepository).should().save(any(ArticleComment.class));
         then(userAccountRepository).should().getReferenceById(dto.userAccountDto().userId());
+        then(articleCommentRepository).should().save(any(ArticleComment.class));
     }
 
     @DisplayName("댓글 저장을 시도했는데 맞는 게시글이 없으면, 경고 로그를 찍고 아무것도 안 한다.")
@@ -81,9 +81,8 @@ class ArticleCommentServiceTest {
 
         // Then
         then(articleRepository).should().getReferenceById(dto.articleId());
-        then(articleCommentRepository).shouldHaveNoInteractions();
         then(userAccountRepository).shouldHaveNoInteractions();
-
+        then(articleCommentRepository).shouldHaveNoInteractions();
     }
 
     @DisplayName("댓글 정보를 입력하면, 댓글을 수정한다.")
@@ -125,15 +124,16 @@ class ArticleCommentServiceTest {
     void givenArticleCommentId_whenDeletingArticleComment_thenDeletesArticleComment() {
         // Given
         Long articleCommentId = 1L;
-        String userId = "kdm-test";
-        willDoNothing().given(articleCommentRepository).deleteByIdAndUserAccount_UserId(articleCommentId,userId);
+        String userId = "kdm";
+        willDoNothing().given(articleCommentRepository).deleteByIdAndUserAccount_UserId(articleCommentId, userId);
 
         // When
-        sut.deleteArticleComment(articleCommentId,userId);
+        sut.deleteArticleComment(articleCommentId, userId);
 
         // Then
-        then(articleCommentRepository).should().deleteByIdAndUserAccount_UserId(articleCommentId,userId);
+        then(articleCommentRepository).should().deleteByIdAndUserAccount_UserId(articleCommentId, userId);
     }
+
 
 
     private ArticleCommentDto createArticleCommentDto(String content) {
@@ -165,7 +165,7 @@ class ArticleCommentServiceTest {
 
     private ArticleComment createArticleComment(String content) {
         return ArticleComment.of(
-                Article.of(createUserAccount(), "title", "content", "hashtag"),
+                createArticle(),
                 content,
                 createUserAccount()
         );
@@ -173,10 +173,10 @@ class ArticleCommentServiceTest {
 
     private UserAccount createUserAccount() {
         return UserAccount.of(
-                "uno",
+                "kdm",
                 "password",
-                "uno@email.com",
-                "Uno",
+                "kdm@email.com",
+                "Kdm",
                 null
         );
     }
@@ -185,8 +185,7 @@ class ArticleCommentServiceTest {
         return Article.of(
                 createUserAccount(),
                 "title",
-                "content",
-                "#java"
+                "content"
         );
     }
 
