@@ -47,7 +47,7 @@ public class Hashtag extends AuditingFields {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Hashtag hashtag = (Hashtag) o;
-        return getId().equals(hashtag.getId());
+        return getId() != null && getId().equals(hashtag.getId());
     }
 
     @Override
