@@ -9,7 +9,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/board
+    url: jdbc:mysql://localhost:3306/board
     username: kdm
     password: 1234
 #    driver-class-name: com.mysql.cj.jdbc.Driver
