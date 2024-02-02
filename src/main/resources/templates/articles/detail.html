@@ -28,7 +28,7 @@
                 <p>
                     <time id="created-at" datetime="2022-01-01T00:00:00">2022-01-01</time>
                 </p>
-                <p id="hashtag">#java</p>
+                <p><span id="hashtag" class ="badge text-bg-secondary mx-1"><a class="text-reset"> #java</a></span>></p>
             </aside>
         </section>
         <article id="article-content" class="col-md-9 col-lg-8">
@@ -124,6 +124,15 @@
     <hr>
     스프링 웹서버에 렌더링되지 않았을 때는 이러한 푸터가 나온다
 </footer>
+<script>
+    // JavaScript로 해시태그를 링크로 바꾸는 코드
+    var contentElement = document.getElementById('article-content');
+    var content = contentElement.textContent;
+    var replacedContent = content.replace(/#([\w가-힣]+)/g, '<a href="/articles?searchType=HASHTAG&searchValue=$1">#$1</a>');
+    // 줄바꿈 처리를 추가
+    replacedContent = replacedContent.replace(/\n/g, '<br>');
+    contentElement.innerHTML = replacedContent;
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
         crossorigin="anonymous"></script>
