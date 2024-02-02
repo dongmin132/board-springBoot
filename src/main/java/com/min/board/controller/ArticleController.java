@@ -46,6 +46,7 @@ public class ArticleController {
         model.addAttribute("articles", articles);
         model.addAttribute("paginationBarNumbers", barNumbers);
         model.addAttribute("searchTypes", SearchType.values()); //array타입으로 보냄. 검색어의 종류를 나타냄.
+        model.addAttribute("searchTypeHashtag", SearchType.HASHTAG);
         return "articles/index";
     }
 
@@ -55,7 +56,7 @@ public class ArticleController {
         model.addAttribute("article", article);
         model.addAttribute("articleComments", article.articleCommentsResponse());
         model.addAttribute("totalCount", articleService.getArticleCount());
-        System.out.println("-----------------------------------------"+articleService.getArticleCount());
+        model.addAttribute("searchTypeHashtag", SearchType.HASHTAG);
 
 
         return "articles/detail";
